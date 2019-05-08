@@ -35,58 +35,86 @@ var build_chart = function(data) {
   var w = 500;
   var h = 500;
   var dataset = [ 5, 10, 15, 20, 25 ];
-  var barPadding = 1;
-  var barsPadding = 15;
+  var barPadding = 2;
+  var topPadding = 25;
+  var sidePadding = 25
   var teams = import_teams(data);
   var x_domain = [0,12];
-  var x_range = [0,w]
+  var x_range = [0, w - (sidePadding * 2)]
 
   var x_scale = d3.scaleLinear()
     .domain(x_domain)
     .range(x_range);
+  var axis_scale = d3.scaleLinear()
+    .domain(x_domain)
+    .range([sidePadding, w - sidePadding]);
 
-  var x_axis = d3.axisBottom(x_scale)
+  var x_axis = d3.axisTop(axis_scale)
     .ticks(x_domain[1])
     .tickFormat(function(d) {
       return d;
     });
+
   var svg = d3.select("body")
     .append("svg")
     .attr("width", w)
     .attr("height", h)
 
+  g_axis = svg.append("g")
+    .attr("class", "axis")
+    .attr("transform", "translate(0," + topPadding + ")")
+    .call(x_axis);
+
+  svg.append("text")
+    .attr("x", w / 2)
+    .attr("y", h - topPadding / 2)
+    .style("text-anchor", "middle")
+    .text("appearances")
+
   var g = svg.selectAll(".rect")
     .data(teams)
     .enter()
     .append("g")
-    .classed("rect", true)
+    .classed("rect", true);
 
   g.append("rect")
-    .attr("x", 0)
-    .attr("y", 0)
+    .attr("x", sidePadding)
     .attr("width", function(d) {
       return x_scale(d.wins);
     })
-    .attr("height", (h - barsPadding) / teams.length - barPadding)
+    .attr("height", (h - topPadding) / teams.length - barPadding)
     .attr("y", function(d, i) {
-      return i * ((h - barsPadding) / teams.length) + barsPadding;
+      return i * ((h - topPadding * 2) / teams.length) + topPadding;
     })
     .attr("fill", "green");
 
   g.append("rect")
-    .attr("x", 0)
-    .attr("y", 0)
     .attr("width", function(d) {
       return x_scale(d.losses);
     })
-    .attr("height", (h - barsPadding) / teams.length - barPadding)
+    .attr("height", (h - topPadding) / teams.length - barPadding)
     .attr("x", function(d, i) {
-      return x_scale(d.wins);
+      return x_scale(d.wins) + sidePadding;
     })
     .attr("y", function(d, i) {
-      return i * ((h - barsPadding) / teams.length) + barsPadding;
+      return i * ((h - topPadding * 2) / teams.length) + topPadding;
     })
     .attr("fill", "red");
+
+  var g = svg.selectAll("text")
+    .data(teams)
+    .enter()
+    .append("g")
+    .classed("labels", true);
+
+  g.append("text")
+    .attr("x", sidePadding / 2)
+    .attr("y", function(d, i) {
+      return i * ((h - topPadding * 2) / teams.length) + topPadding;
+    })
+    .attr("text", function(d) {
+      return d.name
+    })
 }
 
 var import_teams = function(data) {
