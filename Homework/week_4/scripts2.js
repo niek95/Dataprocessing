@@ -21,4 +21,10 @@ svg.selectAll("rect")
       return -1;
   } else if (a.wins + a.losses > b.wins + b.losses) {
       return -1;
-  } 
+  }
+
+  for(var i; i < teams.length; i++) {
+    console.log(teams[i])
+  }
+  console.log("logging")
+  console.log(d.name)

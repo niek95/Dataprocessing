@@ -32,16 +32,17 @@ var team = function(name) {
 }
 
 var build_chart = function(data) {
-  var w = 500;
-  var h = 500;
+  var w = 600;
+  var h = 600;
   var dataset = [ 5, 10, 15, 20, 25 ];
   var barPadding = 2;
   var topPadding = 25;
-  var sidePadding = 25
+  var sidePadding = 150;
   var teams = import_teams(data);
   var x_domain = [0,12];
   var x_range = [0, w - (sidePadding * 2)]
 
+  // set scale for x-axis
   var x_scale = d3.scaleLinear()
     .domain(x_domain)
     .range(x_range);
@@ -55,6 +56,7 @@ var build_chart = function(data) {
       return d;
     });
 
+  // create svg and draw axis and text
   var svg = d3.select("body")
     .append("svg")
     .attr("width", w)
@@ -71,12 +73,35 @@ var build_chart = function(data) {
     .style("text-anchor", "middle")
     .text("appearances")
 
-  var g = svg.selectAll(".rect")
+  for(var i = 0; i < teams.length; i++) {
+    let textSize = 15;
+    svg.append("text")
+      .attr("x", 0)
+      .attr("y", i * ((h - topPadding * 2) / teams.length) + topPadding + textSize)
+      .text(teams[i].name)
+      .style("font-size", textSize)
+  }
+
+
+  for(let i = 2; i < x_domain[1]; i = i + 2) {
+    console.log("drawing line")
+    svg.append("line")
+      .attr("x1", sidePadding + x_scale(i))
+      .attr("y1", topPadding)
+      .attr("x2", sidePadding + x_scale(i))
+      .attr("y2", h - topPadding)
+      .attr("stroke-width", 1)
+      .attr("stroke", "gray")
+    }
+
+  // draw bars
+  var g = svg.selectAll("rect-win")
     .data(teams)
     .enter()
     .append("g")
-    .classed("rect", true);
+    .classed("rect-win", true);
 
+  // draw wins
   g.append("rect")
     .attr("x", sidePadding)
     .attr("width", function(d) {
@@ -86,8 +111,17 @@ var build_chart = function(data) {
     .attr("y", function(d, i) {
       return i * ((h - topPadding * 2) / teams.length) + topPadding;
     })
-    .attr("fill", "green");
+    .attr("fill", "green")
+    .on("mouseover", mouse_over_win)
+    .on("mouseout", mouse_out_win);
 
+  var g = svg.selectAll("rect-lose")
+    .data(teams)
+    .enter()
+    .append("g")
+    .classed("rect-lose", true);
+
+  // draw losses
   g.append("rect")
     .attr("width", function(d) {
       return x_scale(d.losses);
@@ -99,22 +133,26 @@ var build_chart = function(data) {
     .attr("y", function(d, i) {
       return i * ((h - topPadding * 2) / teams.length) + topPadding;
     })
-    .attr("fill", "red");
+    .attr("fill", "red")
+    .on("mouseover", mouse_over_lose)
+    .on("mouseout", mouse_out_lose);;
 
-  var g = svg.selectAll("text")
-    .data(teams)
-    .enter()
-    .append("g")
-    .classed("labels", true);
+  // add interactivity
+  function mouse_over_win(d, i) {
+    d3.select(this).attr("fill", "rgb(0,100,0)");
+  }
 
-  g.append("text")
-    .attr("x", sidePadding / 2)
-    .attr("y", function(d, i) {
-      return i * ((h - topPadding * 2) / teams.length) + topPadding;
-    })
-    .attr("text", function(d) {
-      return d.name
-    })
+  function mouse_out_win(d, i) {
+    d3.select(this).attr("fill", "green")
+  }
+  function mouse_over_lose(d, i) {
+    d3.select(this).attr("fill", "rgb(139,0,0)");
+  }
+
+  function mouse_out_lose(d, i) {
+    d3.select(this).attr("fill", "red")
+  }
+
 }
 
 var import_teams = function(data) {
