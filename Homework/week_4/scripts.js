@@ -87,8 +87,8 @@ var build_chart = function(data) {
       .style("font-size", textSize)
   }
 
-
-  for(let i = 2; i < x_domain[1]; i = i + 2) {
+  // draw guidelines
+  for(let i = 2; i < x_domain[1] + 1; i = i + 2) {
     console.log("drawing line")
     svg.append("line")
       .attr("x1", sidePadding + x_scale(i))
