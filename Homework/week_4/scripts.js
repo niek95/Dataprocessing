@@ -46,6 +46,11 @@ var build_chart = function(data) {
   var x_scale = d3.scaleLinear()
     .domain(x_domain)
     .range(x_range);
+
+  var descale = d3.scaleLinear()
+    .domain(x_range)
+    .range(x_domain);
+
   var axis_scale = d3.scaleLinear()
     .domain(x_domain)
     .range([sidePadding, w - sidePadding]);
@@ -140,17 +145,45 @@ var build_chart = function(data) {
   // add interactivity
   function mouse_over_win(d, i) {
     d3.select(this).attr("fill", "rgb(0,100,0)");
+    let height = d3.select(this).attr("height");
+    let y = d3.select(this).attr("y");
+    let x = d3.select(this).attr("x")
+    svg.append("text")
+      .attr("id", "popup")
+      .attr("x", function() {
+        return x.toString()
+      })
+      .attr("y", function() {
+        return y.toString()
+      })
+      .text(function() {
+        return height.toString()
+      })
   }
 
   function mouse_out_win(d, i) {
-    d3.select(this).attr("fill", "green")
+    d3.select(this).attr("fill", "green");
   }
   function mouse_over_lose(d, i) {
     d3.select(this).attr("fill", "rgb(139,0,0)");
+    let height = d3.select(this).attr("height");
+    let y = d3.select(this).attr("y");
+    let x = d3.select(this).attr("x")
+    svg.append("text")
+      .attr("id", "popup")
+      .attr("x", function() {
+        return x.toString()
+      })
+      .attr("y", function() {
+        return y.toString()
+      })
+      .text(function() {
+        return descale(height).toString()
+      })
   }
 
   function mouse_out_lose(d, i) {
-    d3.select(this).attr("fill", "red")
+    d3.select(this).attr("fill", "red");
   }
 
 }
