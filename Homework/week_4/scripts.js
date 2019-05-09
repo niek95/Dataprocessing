@@ -41,6 +41,7 @@ var build_chart = function(data) {
   var teams = import_teams(data);
   var x_domain = [0,12];
   var x_range = [0, w - (sidePadding * 2)]
+  var textSize = 15;
 
   // set scale for x-axis
   var x_scale = d3.scaleLinear()
@@ -79,7 +80,6 @@ var build_chart = function(data) {
     .text("appearances")
 
   for(var i = 0; i < teams.length; i++) {
-    let textSize = 15;
     svg.append("text")
       .attr("x", 0)
       .attr("y", i * ((h - topPadding * 2) / teams.length) + topPadding + textSize)
@@ -145,9 +145,9 @@ var build_chart = function(data) {
   // add interactivity
   function mouse_over_win(d, i) {
     d3.select(this).attr("fill", "rgb(0,100,0)");
-    let height = d3.select(this).attr("height");
-    let y = d3.select(this).attr("y");
-    let x = d3.select(this).attr("x")
+    let width = d3.select(this).attr("width");
+    let y = parseInt(d3.select(this).attr("y")) + textSize;
+    let x = d3.select(this).attr("x");
     svg.append("text")
       .attr("id", "popup")
       .attr("x", function() {
@@ -157,18 +157,20 @@ var build_chart = function(data) {
         return y.toString()
       })
       .text(function() {
-        return height.toString()
+        return descale(width).toString()
       })
+      .attr("fill", "white");
   }
 
   function mouse_out_win(d, i) {
     d3.select(this).attr("fill", "green");
+    d3.select("#popup").remove();
   }
   function mouse_over_lose(d, i) {
     d3.select(this).attr("fill", "rgb(139,0,0)");
-    let height = d3.select(this).attr("height");
-    let y = d3.select(this).attr("y");
-    let x = d3.select(this).attr("x")
+    let width = d3.select(this).attr("width");
+    let y = parseInt(d3.select(this).attr("y")) + textSize;
+    let x = d3.select(this).attr("x");
     svg.append("text")
       .attr("id", "popup")
       .attr("x", function() {
@@ -178,12 +180,14 @@ var build_chart = function(data) {
         return y.toString()
       })
       .text(function() {
-        return descale(height).toString()
+        return descale(width).toString()
       })
+      .attr("fill", "white");
   }
 
   function mouse_out_lose(d, i) {
     d3.select(this).attr("fill", "red");
+    d3.select("#popup").remove();
   }
 
 }
