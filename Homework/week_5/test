@@ -1,0 +1,8 @@
+fetch("https://api.themoviedb.org/3/movie/" + movie.id +
+  "?api_key=2fcecca4f148e5898e10016fc6753ff4&language=en-US")
+  .then(function(response) {
+    details = response.json();
+    console.log(details);
+    movie.budget = details.budget;
+    movie.revenue = details.revenue;
+  });
