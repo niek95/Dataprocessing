@@ -61,13 +61,13 @@ var preprocess = function(data) {
 };
 
 var clean = function(movies) {
-  movies.forEach(function(element) {
-    if(typeof element.revenue == "undefined" ||
-      typeof element.budget == "undefined" ||
-      typeof element.vote_average == "undefined") {
-        movies.remove(element);
+  for(let i in movies) {
+    if(typeof movies[i].revenue == "undefined" ||
+      typeof movies[i].budget == "undefined" ||
+      typeof movies[i].vote_average == "undefined") {
+        delete movies[i];
     }
-  });
+  };
   return movies;
 };
 
@@ -149,7 +149,8 @@ var build_chart = function(movies, dependant) {
      }
      return topPadding + y_scale(d.vote_average);
    })
-   .attr("r", point_size);
+   .attr("r", point_size)
+   .attr("fill", color_switcher(d.genres[0])[0]);
 
    // create svg and draw axis and text
    g_x_axis = svg.append("g")
@@ -223,3 +224,46 @@ var sort_by_vote = function(movies) {
   }
   return movies.sort(compare);
 };
+
+var color_switcher = function(id) {
+  switch(id) {
+    case 28:
+      return ("rgb(160,227,183)", "Action");
+    case 12:
+      return ("rgb(37,121,80)", "Adventure");
+    case 16:
+      return ("rgb(91,239,143)", "Animation");
+    case 35:
+      return ("rgb(32,142,183)", "Comedy");
+    case 80:
+      return ("rgb(197,213,240)", "Crime");
+    case 99:
+      return ("rgb(31,62,158)", "Documentary");
+    case 18:
+      return ("rgb(208,147,244)", "Drama");
+    case 10751:
+      return ("rgb(158,55,208)", "Family");
+    case 14:
+      return ("rgb(16,75,109)", "Fantasy");
+    case 36:
+      return ("rgb(32,216,253)", "History");
+    case 27:
+      return ("rgb(135,170,35)", "Horror");
+    case 10402:
+      return ("rgb(116,72,34)", "Music");
+    case 9648:
+      return ("rgb(246,144,109)", "Mystery");
+    case 10749:
+      return ("rgb(198,47,77)", "Romance");
+    case 878:
+      return ("rgb(250,209,57)", "Science Fiction");
+    case 10770:
+      return ("rgb(33,167,8)", "TV Movie");
+    case 53:
+      return ("rgb(81,243,16)", "Thriller");
+    case 10752:
+      return ("rgb(172,140,83)", "War");
+    case 37:
+      return ("rgb(255,42,13)", "Western");
+  }
+}
