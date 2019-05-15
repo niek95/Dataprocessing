@@ -6,3 +6,19 @@ fetch("https://api.themoviedb.org/3/movie/" + movie.id +
     movie.budget = details.budget;
     movie.revenue = details.revenue;
   });
+
+  var requestURL = "https://api.themoviedb.org/3/discover/movie?api_key=" +
+  "2fcecca4f148e5898e10016fc6753ff4&language=en-US&sort_by=vote_count.desc" +
+  "&include_adult=false&include_video=false&primary_release_year=" + year +
+  "&vote_count.gte=1000";
+  var request1 = new XMLHttpRequest();
+  request1.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+        var movie_data = JSON.parse(this.responseText);
+        movies = preprocess(movie_data);
+        console.log(movies)
+        build_chart(movies);
+    }
+  };
+  request1.open("GET", requestURL);
+  request1.send();
