@@ -1,11 +1,24 @@
 /*jshint esversion: 8 */
 
 window.onload = function() {
-  main("2001");
+  var year = "2000";
+  var dependant = "revenue";
+  d3.selectAll(".year")
+    .on("click", function() {
+        main(this.getAttribute("value"), dependant);
+        year = this.getAttribute("value");
+    });
+  d3.selectAll(".dependant")
+    .on("click", function() {
+        main(year, this.getAttribute("value"));
+        dependant = this.getAttribute("value");
+    });
+  main(year, dependant);
 };
 
 
-var main = async function(year) {
+var main = async function(year, dependant) {
+  d3.select("svg").remove();
   movie_data = await fetch("https://api.themoviedb.org/3/discover/movie?api_key=" +
   "2fcecca4f148e5898e10016fc6753ff4&language=en-US&sort_by=vote_count.desc" +
   "&include_adult=false&include_video=false&primary_release_year=" + year +
@@ -14,7 +27,7 @@ var main = async function(year) {
       return response.json();
     });
   movies = await preprocess(movie_data);
-  build_chart(movies);
+  build_chart(movies, dependant);
 };
 
 var preprocess = function(data) {
@@ -43,28 +56,43 @@ var preprocess = function(data) {
   }
   return Promise.all(urls)
     .then(function() {
-      return movies;
+      return(clean(movies));
     });
+};
+
+var clean = function(movies) {
+  movies.forEach(function(element) {
+    if(typeof element.revenue == "undefined" ||
+      typeof element.budget == "undefined" ||
+      typeof element.vote_average == "undefined") {
+        movies.remove(element);
+    }
+  });
+  return movies;
 };
 
 var convert_genres = function(movies) {
 
 };
 
-var build_chart = function(movies) {
+var build_chart = function(movies, dependant) {
   sorted_movies = sort_by_budget(movies, "budget");
   console.log(sorted_movies);
   var w = 600;
   var h = 600;
-  var topPadding = 25;
-  var sidePadding = 25;
+  var topPadding = 50;
+  var sidePadding = 50;
   var point_size = w / 100;
-  var max_x = sort_by_budget(movies, "budget")[movies.length - 1].budget;
-  var max_y = sort_by_revenue(movies, "revenue")[movies.length - 1].revenue;
+  var max_x = sort_by_budget(movies)[movies.length - 1].budget;
+  if(dependant == "revenue") {
+    var max_y = sort_by_revenue(movies)[movies.length - 1].revenue;
+  } else {
+    var max_y = 10;
+  }
   var x_domain = [0, max_x];
   var x_range = [0, w - (sidePadding * 2)];
-  var y_domain = [0, sorted_movies[movies.length - 1].revenue];
-  var y_range = [0, w - (topPadding * 2)];
+  var y_domain = [0, max_y];
+  var y_range = [h - (topPadding * 2), 0];
 
   var x_scale = d3.scaleLinear()
     .domain(x_domain)
@@ -78,14 +106,28 @@ var build_chart = function(movies) {
     .domain(x_range)
     .range(x_domain);
 
-  var axis_scale = d3.scaleLinear()
+  var x_axis_scale = d3.scaleLinear()
     .domain(x_domain)
     .range([sidePadding, w - sidePadding]);
 
-  var x_axis = d3.axisBottom(axis_scale)
-    .ticks(w / 60)
+  var y_axis_scale = d3.scaleLinear()
+    .domain(y_domain)
+    .range([h - topPadding, topPadding]);
+
+
+  var x_axis = d3.axisBottom(x_axis_scale)
+    .ticks(10)
     .tickFormat(function(d) {
       return d / 1000000;
+    });
+
+  var y_axis = d3.axisLeft(y_axis_scale)
+    .ticks(10)
+    .tickFormat(function(d) {
+      if(dependant == "revenue") {
+        return d / 1000000;
+      }
+      return d;
     });
 
   //Create SVG element
@@ -99,22 +141,51 @@ var build_chart = function(movies) {
    .enter()
    .append("circle")
    .attr("cx", function(d) {
-        return sidePadding + x_scale(d.budget);
+     return sidePadding + x_scale(d.budget);
    })
    .attr("cy", function(d) {
-        return h - topPadding - y_scale(d.revenue);
+     if(dependant == "revenue") {
+       return topPadding + y_scale(d.revenue);
+     }
+     return topPadding + y_scale(d.vote_average);
    })
    .attr("r", point_size);
 
    // create svg and draw axis and text
-   g_axis = svg.append("g")
+   g_x_axis = svg.append("g")
      .attr("class", "axis")
-     .attr("transform", "translate(0," + topPadding + ")")
+     .attr("transform", "translate(0," + (h - topPadding) + ")")
      .call(x_axis);
+
+   g_y_axis = svg.append("g")
+    .attr("class", "axis")
+    .attr("transform", "translate(" + (sidePadding) + ",0)")
+    .call(y_axis);
+
+   svg.append("text")
+     .attr("x", w / 2)
+     .attr("y", h - topPadding / 3)
+     .style("text-anchor", "middle")
+     .text("Budget(# million dollars)");
+
+   if(dependant == "revenue") {
+     svg.append("text")
+      .attr("x", w / 2)
+      .attr("y", - topPadding / 6)
+      .style("text-anchor", "middle")
+      .attr("transform", "rotate(90)")
+      .text("Revenue(# million dollars)");
+   } else {
+     svg.append("text")
+      .attr("x", w / 2)
+      .attr("y", - topPadding / 6)
+      .style("text-anchor", "middle")
+      .attr("transform", "rotate(90)")
+      .text("Vote average");
+   }
 };
 
 var sort_by_budget = function(movies, criterium) {
-  console.log("sorting by " + criterium);
   function compare(a, b) {
     if (a.budget > b.budget) {
       return 1;
@@ -127,13 +198,25 @@ var sort_by_budget = function(movies, criterium) {
   return movies.sort(compare);
 };
 
-var sort_by_revenue = function(movies, criterium) {
-  console.log("sorting by " + criterium);
+var sort_by_revenue = function(movies) {
   function compare(a, b) {
     if (a.revenue > b.revenue) {
       return 1;
     }
     if (a.revenue < b.revenue) {
+      return -1;
+    }
+    return 0;
+  }
+  return movies.sort(compare);
+};
+
+var sort_by_vote = function(movies) {
+  function compare(a, b) {
+    if (a.vote_average > b.vote_average) {
+      return 1;
+    }
+    if (a.vote_average < b.vote_average) {
       return -1;
     }
     return 0;
