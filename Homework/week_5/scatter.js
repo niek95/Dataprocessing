@@ -38,7 +38,7 @@ var preprocess = function(data) {
       id:item.id,
       title:item.title,
       vote_average:item.vote_average,
-      genre:item.genre_ids
+      genres:item.genre_ids
     };
     return movie;
   });
@@ -150,7 +150,9 @@ var build_chart = function(movies, dependant) {
      return topPadding + y_scale(d.vote_average);
    })
    .attr("r", point_size)
-   .attr("fill", color_switcher(d.genres[0])[0]);
+   .attr("fill", function(d) {
+     return color_switcher(d.genres[0])[0];
+   });
 
    // create svg and draw axis and text
    g_x_axis = svg.append("g")
@@ -184,6 +186,26 @@ var build_chart = function(movies, dependant) {
       .attr("transform", "rotate(90)")
       .text("Vote average");
    }
+
+   svg.selectAll("text")
+   .data(sorted_movies)
+   .enter()
+   .append("text")
+   .text(function(d) {
+        return d.title;
+   })
+   .attr("x", function(d) {
+     return sidePadding + x_scale(d.budget);
+   })
+   .attr("y", function(d) {
+     if(dependant == "revenue") {
+       return topPadding + y_scale(d.revenue);
+     }
+     return topPadding + y_scale(d.vote_average);
+   })
+   .attr("font-family", "sans-serif")
+   .attr("font-size", "11px")
+   .attr("fill", "red");
 };
 
 var sort_by_budget = function(movies, criterium) {
@@ -228,42 +250,43 @@ var sort_by_vote = function(movies) {
 var color_switcher = function(id) {
   switch(id) {
     case 28:
-      return ("rgb(160,227,183)", "Action");
+      return ["rgb(160,227,183)", "Action"];
     case 12:
-      return ("rgb(37,121,80)", "Adventure");
+      return ["rgb(37,121,80)", "Adventure"];
     case 16:
-      return ("rgb(91,239,143)", "Animation");
+      return ["rgb(91,239,143)", "Animation"];
     case 35:
-      return ("rgb(32,142,183)", "Comedy");
+      return ["rgb(32,142,183)", "Comedy"];
     case 80:
-      return ("rgb(197,213,240)", "Crime");
+      return ["rgb(197,213,240)", "Crime"];
     case 99:
-      return ("rgb(31,62,158)", "Documentary");
+      return ["rgb(31,62,158)", "Documentary"];
     case 18:
-      return ("rgb(208,147,244)", "Drama");
+      return ["rgb(208,147,244)", "Drama"];
     case 10751:
-      return ("rgb(158,55,208)", "Family");
+      return ["rgb(158,55,208)", "Family"];
     case 14:
-      return ("rgb(16,75,109)", "Fantasy");
+      return ["rgb(16,75,109)", "Fantasy"];
     case 36:
-      return ("rgb(32,216,253)", "History");
+      return ["rgb(32,216,253)", "History"];
     case 27:
-      return ("rgb(135,170,35)", "Horror");
+      return ["rgb(135,170,35)", "Horror"];
     case 10402:
-      return ("rgb(116,72,34)", "Music");
+      return ["rgb(116,72,34)", "Music"];
     case 9648:
-      return ("rgb(246,144,109)", "Mystery");
+      return ["rgb(246,144,109)", "Mystery"];
     case 10749:
-      return ("rgb(198,47,77)", "Romance");
+      return ["rgb(198,47,77)", "Romance"];
     case 878:
-      return ("rgb(250,209,57)", "Science Fiction");
+      return ["rgb(250,209,57)", "Science Fiction"];
     case 10770:
-      return ("rgb(33,167,8)", "TV Movie");
+      return ["rgb(33,167,8)", "TV Movie"];
     case 53:
-      return ("rgb(81,243,16)", "Thriller");
+      return ["rgb(81,243,16)", "Thriller"];
     case 10752:
-      return ("rgb(172,140,83)", "War");
+      return ["rgb(172,140,83)", "War"];
     case 37:
-      return ("rgb(255,42,13)", "Western");
+      return ["rgb(255,42,13)", "Western"];
+    default: ["rgb(255,0,0)", "genre"]
   }
 }
