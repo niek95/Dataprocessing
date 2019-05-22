@@ -1,0 +1,8 @@
+var txtFile = new XMLHttpRequest();
+txtFile.onreadystatechange = () => {
+  if (txtFile.readyState === 4 && txtFile.status == 200) {
+    main(preprocess(txtFile.responseText));
+  }
+};
+txtFile.open("GET", fileName);
+txtFile.send();
