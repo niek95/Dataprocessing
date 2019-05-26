@@ -3,29 +3,28 @@ window.onload = function() {
 };
 
 var main = async function() {
-  var year = "2010";
-  var fileName = "Data/ghg_data.json";
-  country_data = await fetch(fileName)
-    .then((response) => {
-      return response.json();
-    });
+  let  fileName = "Data/ghg_data.json";
+  let country_data = await d3v5.json(fileName);
+  countries = preprocess(country_data);
+  console.log(countries);
 };
 
-var preprocess = function(data, year) {
-  json_data = JSON.parse(data);
+var preprocess = function(json_data) {
   countries = [];
-  for (let i = 0; i < json_data.length; i++) {
+  let i = 0;
+  while (i < json_data.length) {
     country_name = json_data[i].country_or_area;
     let country = {
       name:country_name
     };
-    i++;
-    while (i < json_data.length || json_data[i].country_or_area == country_name) {
-      eval("country." + Object.keys(json_data[i])[3] + ":" + json_data[i].value);
+    category_name = json_data[i].category;
+    values = {};
+    while (i < json_data.length && json_data[i].country_or_area == country_name) {
+      values[json_data[i].year] = json_data[i].value;
       i++;
     }
-
-
+    country[category_name] = values;
+    countries.push(country);
   }
-  return json_data;
+  return countries;
 };
