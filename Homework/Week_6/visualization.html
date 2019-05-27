@@ -4,15 +4,18 @@ uva studentnumber: 12639184-->
 <html>
   <head>
     <meta charset="utf-8">
+    <title>Linked views</title>
     <script src="https://d3js.org/d3.v5.js"></script>
     <script>
-    var d3v5 = window.d3;
-    window.d3 = null;
+      var d3v5 = window.d3;
+      window.d3 = null;
     </script>
     <script src="https://d3js.org/d3.v3.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
+    <script src="datamaps.world.min.js"></script>
     <script>
-    var d3v3 = window.d3;
-    window.d3 = null;
+      d3v3 = d3;
+      window.d3 = null;
     </script>
   </head>
   <body>
@@ -21,6 +24,7 @@ uva studentnumber: 12639184-->
     <a href = "https://www.kaggle.com/unitednations/international-greenhouse-gas-emissions/downloads/international-greenhouse-gas-emissions.zip/1">
       https://www.kaggle.com/unitednations/international-greenhouse-gas-emissions/downloads/international-greenhouse-gas-emissions.zip/1
     </a>
-    <script type="text/javascript", src="visualize.js"></script>
+    <div id="container" style="position: relative; width: 800px; height: 600px;"></div>
+    <script src="visualize.js"></script>
   </body>
 </html>
