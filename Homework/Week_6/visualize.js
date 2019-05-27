@@ -6,21 +6,35 @@ var main = async () => {
   let fileName = "Data/ghg_data.json";
   let country_data = await d3v5.json(fileName);
   let countries = await preprocess(country_data);
-  console.log(countries);
-  visualize(countries, "carbon_dioxide_co2_emissions_without_land_use_land_use_change_and_forestry_lulucf_in_kilotonne_co2_equivalent", 2012);
+  let cat_select = document.getElementById("cat_select");
+  cat_select.onchange = () => {
+    populate_years(countries, cat_select.value);
+  };
+  let year_select = document.getElementById("year_select");
+  year_select.onchange = () => {
+    visualize(countries, cat_select.value, year_select.value);
+  };
 };
 
 var preprocess = async (json_data) => {
 // Add country and its categories to list
   let countries = {};
+  let categories = [];
   let i = 0;
   while (i < json_data.length) {
+    // Add country names to countries list
     let country_name = json_data[i].country_or_area;
     if (!countries[country_name]) {
       countries[country_name] = {};
     }
-    // For each category, loop and add the values for each year
+    // For each category, add available years to selection
     let category_name = json_data[i].category;
+    if (!categories.includes(category_name)) {
+      categories.push(category_name);
+      var select = document.getElementById("cat_select");
+      select.options[select.options.length] = new Option(category_name, category_name);
+    }
+    // For each category, add values by year to country
     let values = {};
     while (i < json_data.length && json_data[i].country_or_area === country_name) {
       values[json_data[i].year] = json_data[i].value;
@@ -33,12 +47,14 @@ var preprocess = async (json_data) => {
 };
 
 var visualize = (countries, category, year) => {
+  d3v5.select("svg").remove();
   series = select_data(countries, category, year);
-  let min_max = get_min_max(countries, category, year);
+  let min_max = get_min_max(series);
   let paletteScale = d3v3.scale.linear()
             .domain([min_max[0], min_max[1]])
             .range(["#EFEFFF","#02386F"]);
 
+  // Map values to colours
   series.forEach(function(item){ //
         // item example value ["USA", 70]
         var iso = item[0],
@@ -48,12 +64,22 @@ var visualize = (countries, category, year) => {
 
   var map = new Datamap({
     element: document.getElementById("container"),
+    projection: 'mercator',
     fills: { defaultFill: "#F5F5F5" },
-          data: dataset
+    data: dataset,
+    geographyConfig: {
+      popupTemplate: (geo, data) => {
+          return ['<div class="hoverinfo"><strong>',
+                  category + ' in ' + geo.properties.name,
+                  ': ' + data.numberOfThings,
+                  '</strong></div>'].join('');
+      }
+    }
   });
 };
 
 var add_country_codes = async (countries) => {
+  // Add country codes based on txt file
   let response = await fetch("data/country_codes.txt");
   let text = await response.text();
   text = text.split("\n");
@@ -71,19 +97,40 @@ var get_min_max = (dataset) => {
   let curr_max = 0;
   for (let i = 0; i < dataset.length; i++) {
     curr_min = Math.min(curr_min, dataset[i][1]);
-    curr_max = Math.min(curr_max, dataset[i][1]);
+    curr_max = Math.max(curr_max, dataset[i][1]);
   }
   return [curr_min, curr_max];
 };
 
-select_data = (countries, category, year) => {
+var select_data = (countries, category, year) => {
+  // Selects requested data and returns pairs of country code and value
   dataset = [];
   for (let country in countries) {
-    if (countries.hasOwnProperty(country)) {
-      if (countries[country][category].hasOwnProperty(year)) {
-        dataset.push([countries[country][code], countries[country][category][year]]);
-      }
+    if (countries.hasOwnProperty(country) &&
+        countries[country].hasOwnProperty("code") &&
+        countries[country].hasOwnProperty(category) &&
+        countries[country][category].hasOwnProperty(year)) {
+        dataset.push([countries[country].code , countries[country][category][year]]);
     }
   }
   return dataset;
+};
+
+var populate_years = (countries, category) => {
+  let years = [];
+  let select = document.getElementById("year_select");
+  select.options.length = 0;
+  select.options[0] = new Option("Select year", "");
+  select.options[0].disabled = true;
+  select.options[0].selected = true;
+  for (let country in countries) {
+    if (countries.hasOwnProperty(country) && countries[country].hasOwnProperty("code")) {
+      for (let year in countries[country][category]) {
+        if (countries[country][category].hasOwnProperty(year) && !years.includes(year)) {
+          years.push(year);
+          select.options[select.options.length] = new Option(year, year);
+        }
+      }
+    }
+  }
 };
