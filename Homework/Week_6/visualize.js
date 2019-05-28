@@ -166,7 +166,7 @@ var build_barchart = (country_cat_data) => {
 
 var add_country_codes = async (countries) => {
   // Add country codes based on txt file
-  let response = await fetch("data/country_codes.txt");
+  let response = await fetch("Data/country_codes.txt");
   let text = await response.text();
   text = text.split("\n");
   text.forEach((element) => {
