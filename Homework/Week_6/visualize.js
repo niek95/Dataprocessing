@@ -6,6 +6,7 @@ var main = async () => {
   let fileName = "Data/ghg_data.json";
   let country_data = await d3v5.json(fileName);
   let countries = await preprocess(country_data);
+  console.log(countries);
   let cat_select = document.getElementById("cat_select");
   cat_select.onchange = () => {
     populate_years(countries, cat_select.value);
@@ -55,7 +56,7 @@ var build_map = (countries, category, year) => {
             .range(["#EFEFFF","#02386F"]);
 
   // Map values to colours
-  series.forEach(function(item){ //
+  series.forEach(item => { //
         // item example value ["USA", 70]
         var iso = item[0],
                 value = item[1];
@@ -67,18 +68,100 @@ var build_map = (countries, category, year) => {
     projection: 'mercator',
     fills: { defaultFill: "#F5F5F5" },
     data: dataset,
-    done: function(datamap) {
-      console.log("hi");
-      datamap.svg.selectAll('.datamaps-subunit').on('click', function(geography) {
-          console.log(geography.properties.name);
+    done: datamap => {
+      datamap.svg.selectAll('.datamaps-subunit').on('click', geography => {
+        if (countries.hasOwnProperty(geography.properties.name)) {
+          build_barchart(countries[geography.properties.name][category]);
+        }
+        console.log(geography.properties.name);
       });
     }
   });
 };
 
-var build_barchart = (country) => {
+var build_barchart = (country_cat_data) => {
+  d3v5.select(".bar-chart").remove()
+  let dataset = Object.keys(country_cat_data).map((key) => {
+    return [key, country_cat_data[key]];
+  });
+  let w = 700;
+  let h = 400;
+  let barPadding = 4;
+  let topPadding = 25;
+  let sidePadding = 100;
+  let y_domain = [0, get_min_max(dataset)[1]];
+  let y_range = [0, h - (topPadding * 2)];
 
-}
+  // set scale for x-axis
+  let y_scale = d3v5.scaleLinear()
+    .domain(y_domain)
+    .range(y_range);
+
+  let descale = d3v5.scaleLinear()
+    .domain(y_range)
+    .range(y_domain);
+
+  let y_axis_scale = d3v5.scaleLinear()
+    .domain(y_domain)
+    .range([h - topPadding, topPadding]);
+
+  let x_axis_scale = d3v5.scaleOrdinal()
+    .domain(dataset.map(element => {
+      return element[0];
+    }))
+    .range([sidePadding, w - sidePadding]);
+
+  let y_axis = d3v5.axisLeft(y_axis_scale)
+    .ticks(10);
+
+  let x_axis = d3v5.axisBottom(x_axis_scale);
+
+  // Create svg and draw axis and text
+  var svg = d3v5.select("body")
+    .append("svg")
+    .attr("width", w)
+    .attr("height", h)
+    .attr("class", "bar-chart");
+
+  g_axis = svg.append("g")
+    .attr("class", "axis")
+    .attr("transform", "translate(" + sidePadding + ", 0)")
+    .call(y_axis);
+
+  svg.append("g")
+    .attr("class", "axis")
+    .attr("transform", "translate(0, " + (h - topPadding) + ")")
+    .call(x_axis);
+
+    svg.selectAll("text")
+     .data(dataset)
+     .enter()
+     .append("text")
+     .text((d) => {
+       return d[0];
+     })
+     .attr("x", (d,i) => {
+       return i * ((w - sidePadding * 2) / dataset.length) + sidePadding;
+     })
+     .attr("y", h - topPadding);
+
+  // Draw bars
+  svg.selectAll("rect")
+    .data(dataset)
+    .enter()
+    .append("rect")
+    .attr("x", (d,i) => {
+      return i * ((w - sidePadding * 2) / dataset.length) + sidePadding;
+    })
+    .attr("y", (d) => {
+      return h - topPadding - y_scale(d[1]);
+    })
+    .attr("width", (w - sidePadding * 2) / dataset.length - barPadding)
+    .attr("height", (d) => {
+      return y_scale(d[1]);
+    })
+    .attr("fill", "blue");
+};
 
 var add_country_codes = async (countries) => {
   // Add country codes based on txt file

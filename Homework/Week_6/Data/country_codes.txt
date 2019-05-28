@@ -133,7 +133,7 @@ PRT: Portugal
 PRY: Paraguay
 QAT: Qatar
 ROU: Romania
-RUS: Russian Federation
+RUS: Russia
 RWA: Rwanda
 ESH: Western Sahara
 SAU: Saudi Arabia
