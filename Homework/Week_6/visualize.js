@@ -49,6 +49,7 @@ var preprocess = async (json_data) => {
 
 var build_map = (countries, category, year) => {
   d3v5.select("svg").remove();
+  d3v5.select(".bar-chart").remove();
   series = select_data(countries, category, year);
   let min_max = get_min_max(series);
   let paletteScale = d3v3.scale.linear()
@@ -80,7 +81,7 @@ var build_map = (countries, category, year) => {
 };
 
 var build_barchart = (country_cat_data) => {
-  d3v5.select(".bar-chart").remove()
+  d3v5.select(".bar-chart").remove();
   let dataset = Object.keys(country_cat_data).map((key) => {
     return [key, country_cat_data[key]];
   });
