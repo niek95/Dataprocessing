@@ -12,7 +12,7 @@ var main = async () => {
   };
   let year_select = document.getElementById("year_select");
   year_select.onchange = () => {
-    visualize(countries, cat_select.value, year_select.value);
+    build_map(countries, cat_select.value, year_select.value);
   };
 };
 
@@ -46,7 +46,7 @@ var preprocess = async (json_data) => {
   return countries;
 };
 
-var visualize = (countries, category, year) => {
+var build_map = (countries, category, year) => {
   d3v5.select("svg").remove();
   series = select_data(countries, category, year);
   let min_max = get_min_max(series);
@@ -67,16 +67,18 @@ var visualize = (countries, category, year) => {
     projection: 'mercator',
     fills: { defaultFill: "#F5F5F5" },
     data: dataset,
-    geographyConfig: {
-      popupTemplate: (geo, data) => {
-          return ['<div class="hoverinfo"><strong>',
-                  category + ' in ' + geo.properties.name,
-                  ': ' + data.numberOfThings,
-                  '</strong></div>'].join('');
-      }
+    done: function(datamap) {
+      console.log("hi");
+      datamap.svg.selectAll('.datamaps-subunit').on('click', function(geography) {
+          console.log(geography.properties.name);
+      });
     }
   });
 };
+
+var build_barchart = (country) => {
+
+}
 
 var add_country_codes = async (countries) => {
   // Add country codes based on txt file
