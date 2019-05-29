@@ -9,6 +9,7 @@ var main = async () => {
   console.log(countries);
   let cat_select = document.getElementById("cat_select");
   cat_select.onchange = () => {
+    d3v5.select(".bar-chart").remove();
     populate_years(countries, cat_select.value);
   };
   let year_select = document.getElementById("year_select");
@@ -49,7 +50,6 @@ var preprocess = async (json_data) => {
 
 var build_map = (countries, category, year) => {
   d3v5.select("svg").remove();
-  d3v5.select(".bar-chart").remove();
   series = select_data(countries, category, year);
   let min_max = get_min_max(series);
   let paletteScale = d3v3.scale.linear()
@@ -72,15 +72,23 @@ var build_map = (countries, category, year) => {
     done: datamap => {
       datamap.svg.selectAll('.datamaps-subunit').on('click', geography => {
         if (countries.hasOwnProperty(geography.properties.name)) {
-          build_barchart(countries[geography.properties.name][category]);
+          build_barchart(countries[geography.properties.name][category],
+                         category, geography.properties.name);
         }
-        console.log(geography.properties.name);
       });
+    },
+    geographyConfig: {
+      popupTemplate: function(geo, data) {
+        return ['<div class="hoverinfo"><strong>',
+                geo.properties.name,
+                ': ' + data.numberOfThings,
+                '</strong></div>'].join('');
+      }
     }
   });
 };
 
-var build_barchart = (country_cat_data) => {
+var build_barchart = (country_cat_data, category, country_name) => {
   d3v5.select(".bar-chart").remove();
   let dataset = Object.keys(country_cat_data).map((key) => {
     return [key, country_cat_data[key]];
@@ -88,7 +96,7 @@ var build_barchart = (country_cat_data) => {
   let w = 700;
   let h = 400;
   let barPadding = 4;
-  let topPadding = 25;
+  let topPadding = 35;
   let sidePadding = 100;
   let y_domain = [0, get_min_max(dataset)[1]];
   let y_range = [0, h - (topPadding * 2)];
@@ -106,7 +114,7 @@ var build_barchart = (country_cat_data) => {
     .domain(y_domain)
     .range([h - topPadding, topPadding]);
 
-  let x_axis_scale = d3v5.scaleOrdinal()
+  let x_axis_scale = d3v5.scaleBand()
     .domain(dataset.map(element => {
       return element[0];
     }))
@@ -132,19 +140,25 @@ var build_barchart = (country_cat_data) => {
   svg.append("g")
     .attr("class", "axis")
     .attr("transform", "translate(0, " + (h - topPadding) + ")")
-    .call(x_axis);
+    .call(x_axis)
+    .selectAll("text")
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", "rotate(-65)");
 
-    svg.selectAll("text")
-     .data(dataset)
-     .enter()
-     .append("text")
-     .text((d) => {
-       return d[0];
-     })
-     .attr("x", (d,i) => {
-       return i * ((w - sidePadding * 2) / dataset.length) + sidePadding;
-     })
-     .attr("y", h - topPadding);
+  svg.append("text")
+    .attr("x", w / 2)
+    .attr("y", topPadding / 3)
+    .attr("text-anchor", "middle")
+    .text(country_name);
+
+  svg.append("text")
+    .attr("x", w / 2)
+    .attr("y", 3 * topPadding / 4)
+    .attr("text-anchor", "middle")
+    .text(category)
+    .style("font-size", "12");
 
   // Draw bars
   svg.selectAll("rect")
@@ -161,7 +175,23 @@ var build_barchart = (country_cat_data) => {
     .attr("height", (d) => {
       return y_scale(d[1]);
     })
-    .attr("fill", "blue");
+    .attr("fill", "rgb(51, 153, 255)")
+    .on("mouseover", function(d) {
+      d3v5.select(this)
+        .attr("fill", "rgb(153, 204, 255)");
+      svg.append("text")
+        .attr("class", "tooltip")
+        .attr("x", w - sidePadding)
+        .attr("y", h / 2)
+        .attr("text-anchor", "left")
+        .text(country_name + ": " + d[1])
+        .style("font-size", "10");
+      })
+    .on("mouseout", function() {
+      d3v5.select(this)
+        .attr("fill", "rgb(51, 153, 255)");
+      d3v5.select(".tooltip").remove();
+      });
 };
 
 var add_country_codes = async (countries) => {
