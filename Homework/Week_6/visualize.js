@@ -93,11 +93,11 @@ var build_barchart = (country_cat_data, category, country_name) => {
   let dataset = Object.keys(country_cat_data).map((key) => {
     return [key, country_cat_data[key]];
   });
-  let w = 700;
+  let w = 800;
   let h = 400;
   let barPadding = 4;
   let topPadding = 35;
-  let sidePadding = 120;
+  let sidePadding = 200;
   let y_domain = [0, get_min_max(dataset)[1]];
   let y_range = [0, h - (topPadding * 2)];
 
